@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_message_at: string | null
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_user1_id_fkey"
+            columns: ["user1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_user2_id_fkey"
+            columns: ["user2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       food_listings: {
         Row: {
           created_at: string | null
@@ -21,6 +60,7 @@ export type Database = {
           food_type: string | null
           giver_id: string
           id: string
+          image_urls: string[] | null
           is_available: boolean | null
           latitude: number | null
           location: string
@@ -30,6 +70,7 @@ export type Database = {
           quantity: string
           title: string
           updated_at: string | null
+          view_count: number | null
         }
         Insert: {
           created_at?: string | null
@@ -37,6 +78,7 @@ export type Database = {
           food_type?: string | null
           giver_id: string
           id?: string
+          image_urls?: string[] | null
           is_available?: boolean | null
           latitude?: number | null
           location: string
@@ -46,6 +88,7 @@ export type Database = {
           quantity: string
           title: string
           updated_at?: string | null
+          view_count?: number | null
         }
         Update: {
           created_at?: string | null
@@ -53,6 +96,7 @@ export type Database = {
           food_type?: string | null
           giver_id?: string
           id?: string
+          image_urls?: string[] | null
           is_available?: boolean | null
           latitude?: number | null
           location?: string
@@ -62,6 +106,7 @@ export type Database = {
           quantity?: string
           title?: string
           updated_at?: string | null
+          view_count?: number | null
         }
         Relationships: [
           {
@@ -73,29 +118,142 @@ export type Database = {
           },
         ]
       }
+      food_requests: {
+        Row: {
+          created_at: string | null
+          delivery_preference: string | null
+          food_preference: string
+          id: string
+          latitude: number
+          location_address: string
+          longitude: number
+          needed_by: string
+          notes: string | null
+          organization_name: string | null
+          people_count: number
+          receiver_id: string
+          status: string | null
+          updated_at: string | null
+          urgency_level: string
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_preference?: string | null
+          food_preference: string
+          id?: string
+          latitude: number
+          location_address: string
+          longitude: number
+          needed_by: string
+          notes?: string | null
+          organization_name?: string | null
+          people_count: number
+          receiver_id: string
+          status?: string | null
+          updated_at?: string | null
+          urgency_level: string
+        }
+        Update: {
+          created_at?: string | null
+          delivery_preference?: string | null
+          food_preference?: string
+          id?: string
+          latitude?: number
+          location_address?: string
+          longitude?: number
+          needed_by?: string
+          notes?: string | null
+          organization_name?: string | null
+          people_count?: number
+          receiver_id?: string
+          status?: string | null
+          updated_at?: string | null
+          urgency_level?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_requests_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          conversation_id: string
+          created_at: string | null
+          id: string
+          message_text: string
+          read_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          message_text: string
+          read_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          message_text?: string
+          read_at?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          bio: string | null
           created_at: string | null
           full_name: string | null
           id: string
           location: string | null
+          organization_name: string | null
           phone: string | null
+          profile_picture_url: string | null
           role: Database["public"]["Enums"]["user_role"]
         }
         Insert: {
+          bio?: string | null
           created_at?: string | null
           full_name?: string | null
           id: string
           location?: string | null
+          organization_name?: string | null
           phone?: string | null
+          profile_picture_url?: string | null
           role: Database["public"]["Enums"]["user_role"]
         }
         Update: {
+          bio?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
           location?: string | null
+          organization_name?: string | null
           phone?: string | null
+          profile_picture_url?: string | null
           role?: Database["public"]["Enums"]["user_role"]
         }
         Relationships: []
@@ -105,7 +263,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      expire_old_requests: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      get_or_create_conversation: {
+        Args: { other_user_id: string }
+        Returns: string
+      }
+      mark_messages_as_read: {
+        Args: { p_conversation_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       user_role: "food_giver" | "food_receiver"
