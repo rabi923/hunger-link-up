@@ -8,6 +8,7 @@ interface MapMarkerProps {
   data: MapDataItem;
   userRole: 'food_giver' | 'food_receiver';
   userLocation: LocationCoords | null;
+  onChatClick: (userId: string, userName: string) => void;
 }
 
 // Custom marker icons
@@ -42,13 +43,18 @@ const createCustomIcon = (color: string, emoji: string) => {
 const foodGiverIcon = createCustomIcon('#10b981', '🍽️');
 const foodReceiverIcon = createCustomIcon('#ef4444', '🤝');
 
-const MapMarker = ({ data, userRole, userLocation }: MapMarkerProps) => {
+const MapMarker = ({ data, userRole, userLocation, onChatClick }: MapMarkerProps) => {
   const icon = userRole === 'food_receiver' ? foodGiverIcon : foodReceiverIcon;
   const position: [number, number] = [data.latitude, data.longitude];
 
   return (
     <Marker position={position} icon={icon}>
-      <MapPopup data={data} userRole={userRole} userLocation={userLocation} />
+      <MapPopup 
+        data={data} 
+        userRole={userRole} 
+        userLocation={userLocation}
+        onChatClick={onChatClick}
+      />
     </Marker>
   );
 };

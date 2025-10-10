@@ -12,6 +12,7 @@ import MapSearch from './MapSearch';
 import MapMarker from './MapMarker';
 import BottomNavigation from './BottomNavigation';
 import ListView from './ListView';
+import ChatModal from '../Chat/ChatModal';
 import { Loader2 } from 'lucide-react';
 
 interface MapViewProps {
@@ -41,6 +42,11 @@ const MapView = ({ userRole, onTabChange }: MapViewProps) => {
   const [radiusKm, setRadiusKm] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [chatState, setChatState] = useState<{ userId: string; userName: string } | null>(null);
+
+  const handleChatClick = (userId: string, userName: string) => {
+    setChatState({ userId, userName });
+  };
 
   const filteredData = useMemo(() => {
     if (!userLocation || !data) return [];
@@ -103,6 +109,7 @@ const MapView = ({ userRole, onTabChange }: MapViewProps) => {
                 data={item}
                 userRole={userRole}
                 userLocation={userLocation}
+                onChatClick={handleChatClick}
               />
             ))}
 
@@ -144,6 +151,14 @@ const MapView = ({ userRole, onTabChange }: MapViewProps) => {
         }}
         userRole={userRole}
       />
+
+      {chatState && (
+        <ChatModal
+          otherUserId={chatState.userId}
+          otherUserName={chatState.userName}
+          onClose={() => setChatState(null)}
+        />
+      )}
       
       <style>{`
         @keyframes pulse {

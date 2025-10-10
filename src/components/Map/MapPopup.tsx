@@ -5,17 +5,15 @@ import { MessageCircle, Phone, Navigation, Users, Clock, MapPin, Heart, Leaf } f
 import { MapDataItem } from '@/hooks/useMapData';
 import { calculateDistance, formatDistance } from '@/utils/distanceCalculator';
 import type { LocationCoords } from '@/utils/geolocation';
-import { useState } from 'react';
-import ChatModal from '../Chat/ChatModal';
 
 interface MapPopupProps {
   data: MapDataItem;
   userRole: 'food_giver' | 'food_receiver';
   userLocation: LocationCoords | null;
+  onChatClick: (userId: string, userName: string) => void;
 }
 
-const MapPopup = ({ data, userRole, userLocation }: MapPopupProps) => {
-  const [chatOpen, setChatOpen] = useState(false);
+const MapPopup = ({ data, userRole, userLocation, onChatClick }: MapPopupProps) => {
   const distance = userLocation
     ? calculateDistance(userLocation, { lat: data.latitude, lng: data.longitude })
     : null;
@@ -32,8 +30,7 @@ const MapPopup = ({ data, userRole, userLocation }: MapPopupProps) => {
   if (userRole === 'food_receiver') {
     // Food giver's listing popup (for receivers)
     return (
-      <>
-        <Popup className="custom-popup" maxWidth={350}>
+      <Popup className="custom-popup" maxWidth={350}>
           <div className="p-2">
             {data.image_urls?.[0] && (
               <img
@@ -81,7 +78,7 @@ const MapPopup = ({ data, userRole, userLocation }: MapPopupProps) => {
             
             <div className="grid grid-cols-2 gap-2">
               <Button 
-                onClick={() => setChatOpen(true)} 
+                onClick={() => onChatClick(data.giver_id, data.giver?.full_name || 'User')} 
                 className="w-full"
               >
                 <MessageCircle className="h-4 w-4 mr-2" />
@@ -109,15 +106,6 @@ const MapPopup = ({ data, userRole, userLocation }: MapPopupProps) => {
             </Button>
           </div>
         </Popup>
-        
-        {chatOpen && (
-          <ChatModal
-            otherUserId={data.giver_id}
-            otherUserName={data.giver?.full_name || 'User'}
-            onClose={() => setChatOpen(false)}
-          />
-        )}
-      </>
     );
   } else {
     // Food receiver's request popup (for givers)
@@ -129,8 +117,7 @@ const MapPopup = ({ data, userRole, userLocation }: MapPopupProps) => {
     };
 
     return (
-      <>
-        <Popup className="custom-popup" maxWidth={350}>
+      <Popup className="custom-popup" maxWidth={350}>
           <div className="p-2">
             <div className="flex items-start gap-3 mb-3">
               {data.receiver?.profile_picture_url ? (
@@ -192,7 +179,7 @@ const MapPopup = ({ data, userRole, userLocation }: MapPopupProps) => {
             
             <div className="grid grid-cols-2 gap-2">
               <Button 
-                onClick={() => setChatOpen(true)} 
+                onClick={() => onChatClick(data.receiver_id, data.receiver?.full_name || 'User')} 
                 className="w-full"
               >
                 <MessageCircle className="h-4 w-4 mr-2" />
@@ -220,15 +207,6 @@ const MapPopup = ({ data, userRole, userLocation }: MapPopupProps) => {
             </Button>
           </div>
         </Popup>
-        
-        {chatOpen && (
-          <ChatModal
-            otherUserId={data.receiver_id}
-            otherUserName={data.receiver?.full_name || 'User'}
-            onClose={() => setChatOpen(false)}
-          />
-        )}
-      </>
     );
   }
 };
