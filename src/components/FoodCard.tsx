@@ -1,19 +1,25 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock, Package, Phone, User, Edit, Trash2 } from "lucide-react";
+import { MapPin, Clock, Package, Phone, User, Navigation, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { calculateDistance, formatDistance } from "@/utils/distanceCalculator";
+import type { LocationCoords } from "@/utils/geolocation";
 
 interface FoodCardProps {
   listing: any;
   isOwner?: boolean;
   showContact?: boolean;
   onUpdate?: () => void;
+  userLocation?: LocationCoords | null;
 }
 
-const FoodCard = ({ listing, isOwner, showContact, onUpdate }: FoodCardProps) => {
+const FoodCard = ({ listing, isOwner, showContact, onUpdate, userLocation }: FoodCardProps) => {
+  const distance = userLocation && listing.latitude && listing.longitude
+    ? calculateDistance(userLocation, { lat: listing.latitude, lng: listing.longitude })
+    : null;
   const handleDelete = async () => {
     const { error } = await supabase
       .from('food_listings')
@@ -85,6 +91,13 @@ const FoodCard = ({ listing, isOwner, showContact, onUpdate }: FoodCardProps) =>
             <MapPin className="h-4 w-4 shrink-0" />
             <span className="line-clamp-1">{listing.location}</span>
           </div>
+
+          {distance && (
+            <div className="flex items-center gap-2 text-primary font-medium">
+              <Navigation className="h-4 w-4 shrink-0" />
+              <span>{formatDistance(distance)}</span>
+            </div>
+          )}
 
           {showContact && listing.profiles && (
             <div className="flex items-center gap-2 text-muted-foreground border-t pt-2 mt-2">
