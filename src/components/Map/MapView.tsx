@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useMapData } from '@/hooks/useMapData';
 import { filterByDistance } from '@/utils/distanceCalculator';
 import MapControls from './MapControls';
+import MapControlButtons from './MapControlButtons';
 import DistanceFilter from './DistanceFilter';
 import MapSearch from './MapSearch';
 import MapMarker from './MapMarker';
@@ -78,34 +79,38 @@ const MapView = ({ userRole, onTabChange }: MapViewProps) => {
   return (
     <div className="relative h-screen w-full">
       {viewMode === 'map' ? (
-        <MapContainer
-          center={defaultCenter}
-          zoom={13}
-          className="h-full w-full"
-          style={{ height: '100vh', width: '100%' }}
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          />
-          
-          {userLocation && (
-            <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
-              <Popup>You are here</Popup>
-            </Marker>
-          )}
-
-          {filteredData.map(item => (
-            <MapMarker
-              key={item.id}
-              data={item}
-              userRole={userRole}
-              userLocation={userLocation}
+        <>
+          <MapContainer
+            center={defaultCenter}
+            zoom={13}
+            className="h-full w-full"
+            style={{ height: '100vh', width: '100%' }}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             />
-          ))}
+            
+            {userLocation && (
+              <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
+                <Popup>You are here</Popup>
+              </Marker>
+            )}
 
-          <MapControls onRecenter={recenter} />
-        </MapContainer>
+            {filteredData.map(item => (
+              <MapMarker
+                key={item.id}
+                data={item}
+                userRole={userRole}
+                userLocation={userLocation}
+              />
+            ))}
+
+            <MapControls onRecenter={recenter} />
+          </MapContainer>
+          
+          <MapControlButtons onRecenter={recenter} />
+        </>
       ) : (
         <ListView
           items={filteredData}
