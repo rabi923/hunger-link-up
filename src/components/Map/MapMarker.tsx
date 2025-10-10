@@ -1,7 +1,7 @@
 import L from 'leaflet';
-import { Marker } from 'react-leaflet';
+import { Marker, Popup } from 'react-leaflet';
 import { MapDataItem } from '@/hooks/useMapData';
-import MapPopup from './MapPopup';
+import PopupContent from './PopupContent';
 import type { LocationCoords } from '@/utils/geolocation';
 
 interface MapMarkerProps {
@@ -49,12 +49,14 @@ const MapMarker = ({ data, userRole, userLocation, onChatClick }: MapMarkerProps
 
   return (
     <Marker position={position} icon={icon}>
-      <MapPopup 
-        data={data} 
-        userRole={userRole} 
-        userLocation={userLocation}
-        onChatClick={onChatClick}
-      />
+      <Popup className="custom-popup" maxWidth={350}>
+        <PopupContent 
+          data={data} 
+          userRole={userRole} 
+          userLocation={userLocation}
+          onChatClick={onChatClick}
+        />
+      </Popup>
     </Marker>
   );
 };
