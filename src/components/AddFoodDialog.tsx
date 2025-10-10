@@ -6,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Upload, X } from "lucide-react";
+import { Loader2, Upload, X, Camera, Image as ImageIcon } from "lucide-react";
+import { compressImage } from "@/utils/imageCompression";
+import { useUserLocation } from "@/hooks/useUserLocation";
 
 interface AddFoodDialogProps {
   open: boolean;
@@ -16,8 +18,10 @@ interface AddFoodDialogProps {
 
 const AddFoodDialog = ({ open, onOpenChange, onSuccess }: AddFoodDialogProps) => {
   const [loading, setLoading] = useState(false);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const { location: userLocation } = useUserLocation();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -25,23 +29,75 @@ const AddFoodDialog = ({ open, onOpenChange, onSuccess }: AddFoodDialogProps) =>
     pickup_time: "",
     location: "",
     food_type: "",
+    latitude: null as number | null,
+    longitude: null as number | null,
   });
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setPhotoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Limit to 5 images total
+    const remainingSlots = 5 - selectedFiles.length;
+    const filesToAdd = files.slice(0, remainingSlots);
+
+    if (files.length > remainingSlots) {
+      toast.info(`Only ${remainingSlots} more images can be added (max 5 total)`);
     }
+
+    // Create previews
+    const newPreviews: string[] = [];
+    for (const file of filesToAdd) {
+      const reader = new FileReader();
+      const preview = await new Promise<string>((resolve) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      newPreviews.push(preview);
+    }
+
+    setSelectedFiles(prev => [...prev, ...filesToAdd]);
+    setImagePreviews(prev => [...prev, ...newPreviews]);
   };
 
-  const removePhoto = () => {
-    setPhotoFile(null);
-    setPhotoPreview(null);
+  const removePhoto = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadImages = async (userId: string): Promise<string[]> => {
+    if (selectedFiles.length === 0) return [];
+
+    setUploading(true);
+    try {
+      const uploadPromises = selectedFiles.map(async (file) => {
+        // Compress image
+        const compressedFile = await compressImage(file);
+        
+        const fileExt = 'webp';
+        const fileName = `${userId}/${Date.now()}_${Math.random()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('food-photos')
+          .upload(fileName, compressedFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('food-photos')
+          .getPublicUrl(fileName);
+
+        return publicUrl;
+      });
+
+      const urls = await Promise.all(uploadPromises);
+      return urls;
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,33 +108,28 @@ const AddFoodDialog = ({ open, onOpenChange, onSuccess }: AddFoodDialogProps) =>
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
-      let photoUrl = null;
+      // Upload all images
+      const imageUrls = await uploadImages(session.user.id);
 
-      // Upload photo if selected
-      if (photoFile) {
-        const fileExt = photoFile.name.split('.').pop();
-        const fileName = `${session.user.id}/${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('food-photos')
-          .upload(fileName, photoFile);
+      // Use user location if available, otherwise null
+      const latitude = userLocation?.lat || null;
+      const longitude = userLocation?.lng || null;
 
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('food-photos')
-          .getPublicUrl(fileName);
-
-        photoUrl = publicUrl;
-      }
-
-      // Create listing
+      // Create listing with image_urls array
       const { error: insertError } = await supabase
         .from('food_listings')
         .insert({
           giver_id: session.user.id,
-          ...formData,
-          photo_url: photoUrl,
+          title: formData.title,
+          description: formData.description,
+          quantity: formData.quantity,
+          pickup_time: formData.pickup_time,
+          location: formData.location,
+          food_type: formData.food_type,
+          latitude,
+          longitude,
+          image_urls: imageUrls,
+          is_available: true,
         });
 
       if (insertError) throw insertError;
@@ -95,9 +146,11 @@ const AddFoodDialog = ({ open, onOpenChange, onSuccess }: AddFoodDialogProps) =>
         pickup_time: "",
         location: "",
         food_type: "",
+        latitude: null,
+        longitude: null,
       });
-      setPhotoFile(null);
-      setPhotoPreview(null);
+      setSelectedFiles([]);
+      setImagePreviews([]);
     } catch (error: any) {
       toast.error(error.message || "Failed to create listing");
     } finally {
@@ -113,37 +166,93 @@ const AddFoodDialog = ({ open, onOpenChange, onSuccess }: AddFoodDialogProps) =>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Photo Upload */}
+          {/* Photo Upload - Multiple Images */}
           <div className="space-y-2">
-            <Label>Food Photo (Optional)</Label>
-            {photoPreview ? (
-              <div className="relative">
-                <img 
-                  src={photoPreview} 
-                  alt="Preview" 
-                  className="w-full h-48 object-cover rounded-lg"
-                />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-2 right-2"
-                  onClick={removePhoto}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+            <Label>Food Photos (Optional, up to 5)</Label>
+            
+            {imagePreviews.length > 0 ? (
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative">
+                      <img 
+                        src={preview} 
+                        alt={`Preview ${index + 1}`} 
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-7 w-7"
+                        onClick={() => removePhoto(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                      {index === 0 && (
+                        <span className="absolute bottom-1 left-1 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded">
+                          Main
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {imagePreviews.length < 5 && (
+                  <label className="flex items-center justify-center w-full h-12 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Upload className="h-5 w-5 text-muted-foreground mr-2" />
+                    <span className="text-sm text-muted-foreground">Add More ({5 - imagePreviews.length} remaining)</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                <span className="text-sm text-muted-foreground">Click to upload photo</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="hidden"
-                />
-              </label>
+              <div className="space-y-2">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                  <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                  <span className="text-sm text-muted-foreground mb-1">Click to add photos</span>
+                  <span className="text-xs text-muted-foreground">Or drag and drop (max 5)</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handlePhotoChange}
+                    className="hidden"
+                  />
+                </label>
+                
+                <div className="flex gap-2">
+                  <label className="flex-1 flex items-center justify-center h-10 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Camera className="h-4 w-4 text-muted-foreground mr-2" />
+                    <span className="text-sm">Camera</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </label>
+                  
+                  <label className="flex-1 flex items-center justify-center h-10 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                    <ImageIcon className="h-4 w-4 text-muted-foreground mr-2" />
+                    <span className="text-sm">Gallery</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
             )}
           </div>
 
@@ -214,11 +323,11 @@ const AddFoodDialog = ({ open, onOpenChange, onSuccess }: AddFoodDialogProps) =>
             />
           </div>
 
-          <Button type="submit" className="w-full h-12" disabled={loading}>
-            {loading ? (
+          <Button type="submit" className="w-full h-12" disabled={loading || uploading}>
+            {loading || uploading ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Creating...
+                {uploading ? "Uploading images..." : "Creating listing..."}
               </>
             ) : (
               "Create Listing"

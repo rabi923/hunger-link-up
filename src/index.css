@@ -113,3 +113,53 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Leaflet Map Styles */
+.leaflet-container {
+  font-family: inherit;
+}
+
+/* Custom marker styles */
+.user-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Map popup styles */
+.leaflet-popup-content-wrapper {
+  @apply rounded-xl shadow-card;
+  padding: 0;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  min-width: 280px;
+}
+
+.leaflet-popup-tip {
+  @apply shadow-card;
+}
+
+/* Pulse animation for user location marker */
+@keyframes pulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); 
+  }
+  50% { 
+    box-shadow: 0 0 0 12px rgba(59, 130, 246, 0); 
+  }
+}
+
+/* Fix leaflet control styles */
+.leaflet-control-zoom a,
+.leaflet-control-attribution {
+  @apply text-foreground bg-background;
+}
+
+.leaflet-bar a {
+  @apply border-border bg-background text-foreground;
+}
+
+.leaflet-bar a:hover {
+  @apply bg-muted;
+}
