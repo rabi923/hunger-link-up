@@ -4,16 +4,13 @@ import { MapDataItem } from '@/hooks/useMapData';
 import { calculateDistance } from '@/utils/distanceCalculator';
 import type { LocationCoords } from '@/utils/geolocation';
 import { GiverPopupContent } from './GiverPopupContent';
-import { ReceiverPopupContent } from './ReceiverPopupContent';
 
-interface MapMarkerProps {
+interface GiverMarkerProps {
   data: MapDataItem;
-  userRole: 'food_giver' | 'food_receiver';
   userLocation: LocationCoords | null;
   onChatClick: (userId: string, userName: string) => void;
 }
 
-// Custom marker icons
 const createCustomIcon = (color: string, emoji: string) => {
   return L.divIcon({
     className: 'custom-marker',
@@ -43,10 +40,8 @@ const createCustomIcon = (color: string, emoji: string) => {
 };
 
 const foodGiverIcon = createCustomIcon('#10b981', '🍽️');
-const foodReceiverIcon = createCustomIcon('#ef4444', '🤝');
 
-const MapMarker = ({ data, userRole, userLocation, onChatClick }: MapMarkerProps) => {
-  const icon = userRole === 'food_receiver' ? foodGiverIcon : foodReceiverIcon;
+export const GiverMarker = ({ data, userLocation, onChatClick }: GiverMarkerProps) => {
   const position: [number, number] = [data.latitude, data.longitude];
   
   const distance = userLocation
@@ -63,35 +58,20 @@ const MapMarker = ({ data, userRole, userLocation, onChatClick }: MapMarkerProps
   };
 
   const handleChatClick = () => {
-    onChatClick(
-      userRole === 'food_receiver' ? data.giver_id : data.receiver_id,
-      userRole === 'food_receiver' ? (data.giver?.full_name || 'User') : (data.receiver?.full_name || 'User')
-    );
+    onChatClick(data.giver_id, data.giver?.full_name || 'User');
   };
 
   return (
-    <Marker position={position} icon={icon}>
+    <Marker position={position} icon={foodGiverIcon}>
       <Popup className="custom-popup" maxWidth={350}>
-        {userRole === 'food_receiver' ? (
-          <GiverPopupContent
-            data={data}
-            distance={distance}
-            onChatClick={handleChatClick}
-            openPhone={openPhone}
-            openDirections={openDirections}
-          />
-        ) : (
-          <ReceiverPopupContent
-            data={data}
-            distance={distance}
-            onChatClick={handleChatClick}
-            openPhone={openPhone}
-            openDirections={openDirections}
-          />
-        )}
+        <GiverPopupContent
+          data={data}
+          distance={distance}
+          onChatClick={handleChatClick}
+          openPhone={openPhone}
+          openDirections={openDirections}
+        />
       </Popup>
     </Marker>
   );
 };
-
-export default MapMarker;

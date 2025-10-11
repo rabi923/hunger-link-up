@@ -9,7 +9,8 @@ import MapControls from './MapControls';
 import MapControlButtons from './MapControlButtons';
 import DistanceFilter from './DistanceFilter';
 import MapSearch from './MapSearch';
-import MapMarker from './MapMarker';
+import { GiverMarker } from './GiverMarker';
+import { ReceiverMarker } from './ReceiverMarker';
 import BottomNavigation from './BottomNavigation';
 import ListView from './ListView';
 import ChatModal from '../Chat/ChatModal';
@@ -104,15 +105,25 @@ const MapView = ({ userRole, onTabChange }: MapViewProps) => {
                 <Popup>You are here</Popup>
               </Marker>
             )}
-            {filteredData.map(item => (
-              <MapMarker
-                key={item.id}
-                data={item}
-                userRole={userRole}
-                userLocation={userLocation}
-                onChatClick={handleChatClick}
-              />
-            ))}
+            {userRole === 'food_receiver' ? (
+              filteredData.map(item => (
+                <GiverMarker
+                  key={item.id}
+                  data={item}
+                  userLocation={userLocation}
+                  onChatClick={handleChatClick}
+                />
+              ))
+            ) : (
+              filteredData.map(item => (
+                <ReceiverMarker
+                  key={item.id}
+                  data={item}
+                  userLocation={userLocation}
+                  onChatClick={handleChatClick}
+                />
+              ))
+            )}
             <MapControls onRecenter={recenter} />
           </MapContainer>
           <MapControlButtons onRecenter={recenter} />
