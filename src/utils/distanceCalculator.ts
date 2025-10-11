@@ -17,6 +17,23 @@ export const formatDistance = (meters: number): string => {
   return `${Math.round(meters / 1000)} km away`;
 };
 
+export const sortByDistance = <T extends { latitude: number; longitude: number }>(
+  items: T[],
+  userLocation: { lat: number; lng: number }
+): T[] => {
+  return [...items].sort((a, b) => {
+    const distanceA = calculateDistance(userLocation, {
+      lat: a.latitude,
+      lng: a.longitude
+    });
+    const distanceB = calculateDistance(userLocation, {
+      lat: b.latitude,
+      lng: b.longitude
+    });
+    return distanceA - distanceB;
+  });
+};
+
 export const filterByDistance = <T extends { latitude: number; longitude: number }>(
   items: T[],
   userLocation: { lat: number; lng: number },

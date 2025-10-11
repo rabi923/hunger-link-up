@@ -4,7 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useMapData } from '@/hooks/useMapData';
-import { filterByDistance } from '@/utils/distanceCalculator';
+import { filterByDistance, sortByDistance } from '@/utils/distanceCalculator';
 import MapControls from './MapControls';
 import MapControlButtons from './MapControlButtons';
 import DistanceFilter from './DistanceFilter';
@@ -51,8 +51,10 @@ const MapView = ({ userRole, onTabChange }: MapViewProps) => {
   const filteredData = useMemo(() => {
     if (!userLocation || !data) return [];
     
+    // Filter by distance radius
     let filtered = filterByDistance(data, userLocation, radiusKm);
     
+    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(item => {
@@ -67,7 +69,8 @@ const MapView = ({ userRole, onTabChange }: MapViewProps) => {
       });
     }
     
-    return filtered;
+    // Sort by distance (nearest first)
+    return sortByDistance(filtered, userLocation);
   }, [data, userLocation, radiusKm, searchQuery, userRole]);
 
   if (locationLoading || dataLoading) {
