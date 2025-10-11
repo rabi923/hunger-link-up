@@ -89,33 +89,11 @@ const MapView = ({ userRole, onTabChange }: MapViewProps) => {
     <div className="relative h-screen w-full">
       {viewMode === 'map' ? (
         <>
-          <MapContainer
-            center={defaultCenter}
-            zoom={13}
-            className="h-full w-full"
-            style={{ height: '100vh', width: '100%' }}
-          >
-            <>
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              />
-              {userLocation && (
-                <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
-                  <Popup>You are here</Popup>
-                </Marker>
-              )}
-              {filteredData.map(item => (
-                <MapMarker
-                  key={item.id}
-                  data={item}
-                  userRole={userRole}
-                  userLocation={userLocation}
-                  onChatClick={handleChatClick}
-                />
-              ))}
-              <MapControls onRecenter={recenter} />
-            </>
+          <MapContainer center={defaultCenter} zoom={13} className="h-full w-full" style={{ height: '100vh', width: '100%' }}>
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
+            {userLocation && <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}><Popup>You are here</Popup></Marker>}
+            {filteredData.map(item => <MapMarker key={item.id} data={item} userRole={userRole} userLocation={userLocation} onChatClick={handleChatClick} />)}
+            <MapControls onRecenter={recenter} />
           </MapContainer>
           
           <MapControlButtons onRecenter={recenter} />

@@ -67,7 +67,6 @@ const MapMarker = ({ data, userRole, userLocation, onChatClick }: MapMarkerProps
     <Marker position={position} icon={icon}>
       <Popup className="custom-popup" maxWidth={350}>
         {userRole === 'food_receiver' ? (
-          // Food giver's listing popup (for receivers)
           <div className="p-2">
             {data.image_urls?.[0] && (
               <img
@@ -143,7 +142,6 @@ const MapMarker = ({ data, userRole, userLocation, onChatClick }: MapMarkerProps
             </Button>
           </div>
         ) : (
-          // Food receiver's request popup (for givers)
           <div className="p-2">
             <div className="flex items-start gap-3 mb-3">
               {data.receiver?.profile_picture_url ? (
