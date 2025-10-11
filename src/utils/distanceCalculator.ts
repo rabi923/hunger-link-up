@@ -21,7 +21,12 @@ export const sortByDistance = <T extends { latitude: number; longitude: number }
   items: T[],
   userLocation: { lat: number; lng: number }
 ): T[] => {
+  if (!Array.isArray(items)) return [];
+  
   return [...items].sort((a, b) => {
+    if (!a.latitude || !a.longitude) return 1;
+    if (!b.latitude || !b.longitude) return -1;
+    
     const distanceA = calculateDistance(userLocation, {
       lat: a.latitude,
       lng: a.longitude
@@ -39,7 +44,11 @@ export const filterByDistance = <T extends { latitude: number; longitude: number
   userLocation: { lat: number; lng: number },
   radiusKm: number
 ): T[] => {
+  if (!Array.isArray(items)) return [];
+  
   return items.filter(item => {
+    if (!item.latitude || !item.longitude) return false;
+    
     const distance = calculateDistance(userLocation, {
       lat: item.latitude,
       lng: item.longitude

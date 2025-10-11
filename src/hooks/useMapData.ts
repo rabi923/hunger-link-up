@@ -46,7 +46,7 @@ export const useMapData = (
           .order('created_at', { ascending: false });
 
         if (listingsError) throw listingsError;
-        setData(listings || []);
+        setData(Array.isArray(listings) ? listings : []);
       } else {
         // Fetch food requests for givers
         const { data: requests, error: requestsError } = await supabase
@@ -66,11 +66,12 @@ export const useMapData = (
           .order('urgency_level', { ascending: false });
 
         if (requestsError) throw requestsError;
-        setData(requests || []);
+        setData(Array.isArray(requests) ? requests : []);
       }
     } catch (err: any) {
       console.error('Error fetching map data:', err);
       setError(err.message);
+      setData([]);
     } finally {
       setLoading(false);
     }

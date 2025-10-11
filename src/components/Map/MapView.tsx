@@ -50,28 +50,33 @@ const MapView = ({ userRole, onTabChange }: MapViewProps) => {
   };
 
   const filteredData = useMemo(() => {
-    if (!userLocation || !data) return [];
+    if (!userLocation || !data || !Array.isArray(data)) return [];
     
-    // Filter by distance radius
-    let filtered = filterByDistance(data, userLocation, radiusKm);
-    
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(item => {
-        if (userRole === 'food_receiver') {
-          return item.title?.toLowerCase().includes(query) ||
-                 item.description?.toLowerCase().includes(query) ||
-                 item.location?.toLowerCase().includes(query);
-        } else {
-          return item.receiver?.full_name?.toLowerCase().includes(query) ||
-                 item.notes?.toLowerCase().includes(query);
-        }
-      });
+    try {
+      // Filter by distance radius
+      let filtered = filterByDistance(data, userLocation, radiusKm);
+      
+      // Filter by search query
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(item => {
+          if (userRole === 'food_receiver') {
+            return item.title?.toLowerCase().includes(query) ||
+                   item.description?.toLowerCase().includes(query) ||
+                   item.location?.toLowerCase().includes(query);
+          } else {
+            return item.receiver?.full_name?.toLowerCase().includes(query) ||
+                   item.notes?.toLowerCase().includes(query);
+          }
+        });
+      }
+      
+      // Sort by distance (nearest first)
+      return sortByDistance(filtered, userLocation);
+    } catch (err) {
+      console.error('Error filtering data:', err);
+      return [];
     }
-    
-    // Sort by distance (nearest first)
-    return sortByDistance(filtered, userLocation);
   }, [data, userLocation, radiusKm, searchQuery, userRole]);
 
   if (locationLoading || dataLoading) {
@@ -105,7 +110,7 @@ const MapView = ({ userRole, onTabChange }: MapViewProps) => {
                 <Popup>You are here</Popup>
               </Marker>
             )}
-            {userRole === 'food_receiver' && filteredData.map(item => (
+            {userRole === 'food_receiver' && Array.isArray(filteredData) && filteredData.map(item => (
               <GiverMarker
                 key={item.id}
                 data={item}
@@ -113,7 +118,7 @@ const MapView = ({ userRole, onTabChange }: MapViewProps) => {
                 onChatClick={handleChatClick}
               />
             ))}
-            {userRole === 'food_giver' && filteredData.map(item => (
+            {userRole === 'food_giver' && Array.isArray(filteredData) && filteredData.map(item => (
               <ReceiverMarker
                 key={item.id}
                 data={item}
