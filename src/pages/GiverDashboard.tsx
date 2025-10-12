@@ -27,7 +27,7 @@ const GiverDashboard = () => {
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role !== 'food_giver') {
       navigate('/receiver-dashboard');
@@ -49,14 +49,18 @@ const GiverDashboard = () => {
     return <ChatList />;
   }
 
-  if (currentTab === 'add') {
-    setShowRequestForm(true);
-    setCurrentTab('map');
-  }
-
   return (
     <>
-      <MapView userRole="food_giver" onTabChange={setCurrentTab} />
+      <MapView 
+        userRole="food_giver" 
+        onTabChange={(tab) => {
+          if (tab === 'add') {
+            setShowRequestForm(true);
+          } else {
+            setCurrentTab(tab);
+          }
+        }} 
+      />
       <RequestForm
         open={showRequestForm}
         onOpenChange={setShowRequestForm}

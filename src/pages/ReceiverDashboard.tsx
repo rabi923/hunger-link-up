@@ -25,7 +25,7 @@ const ReceiverDashboard = () => {
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role !== 'food_receiver') {
       navigate('/giver-dashboard');
