@@ -26,26 +26,24 @@ const BottomNavigation = ({ currentTab, onTabChange, unreadCount = 0, userRole }
         active={currentTab === 'browse'}
         onClick={() => onTabChange('browse')}
       />
-      <NavButton
-        icon={Plus}
-        label="Add"
-        active={currentTab === 'add'}
-        onClick={() => onTabChange('add')}
-        elevated
-      />
-      <NavButton
-        icon={MessageCircle}
-        label="Chat"
-        active={currentTab === 'chat'}
-        onClick={() => onTabChange('chat')}
-        badge={unreadCount}
-      />
-      <NavButton
-        icon={User}
-        label="Profile"
-        active={currentTab === 'profile'}
-        onClick={() => onTabChange('profile')}
-      />
+      {userRole === 'food_giver' && (
+        <NavButton
+          icon={Plus}
+          label="Add"
+          active={currentTab === 'add'}
+          onClick={() => onTabChange('add')}
+          elevated
+        />
+      )}
+      {userRole === 'food_receiver' && (
+        <NavButton
+          icon={Plus}
+          label="Request"
+          active={currentTab === 'add'}
+          onClick={() => onTabChange('add')}
+          elevated
+        />
+      )}
     </div>
   );
 };

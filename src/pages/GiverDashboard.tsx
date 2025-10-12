@@ -2,14 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import MapView from "@/components/Map/MapView";
-import ChatList from "@/components/Chat/ChatList";
 import RequestForm from "@/components/FoodRequest/RequestForm";
 import { Loader2 } from "lucide-react";
 
 const GiverDashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState('map');
   const [showRequestForm, setShowRequestForm] = useState(false);
 
   useEffect(() => {
@@ -45,10 +43,6 @@ const GiverDashboard = () => {
     );
   }
 
-  if (currentTab === 'chat') {
-    return <ChatList />;
-  }
-
   return (
     <>
       <MapView 
@@ -56,8 +50,6 @@ const GiverDashboard = () => {
         onTabChange={(tab) => {
           if (tab === 'add') {
             setShowRequestForm(true);
-          } else {
-            setCurrentTab(tab);
           }
         }} 
       />
