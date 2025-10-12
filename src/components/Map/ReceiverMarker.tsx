@@ -42,6 +42,11 @@ const createCustomIcon = (color: string, emoji: string) => {
 const foodReceiverIcon = createCustomIcon('#ef4444', '🤝');
 
 export const ReceiverMarker = ({ data, userLocation, onChatClick }: ReceiverMarkerProps) => {
+  // Safety check for coordinates
+  if (!data.latitude || !data.longitude) {
+    return null;
+  }
+
   const position: [number, number] = [data.latitude, data.longitude];
   
   const distance = userLocation

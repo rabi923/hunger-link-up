@@ -17,7 +17,7 @@ export const formatDistance = (meters: number): string => {
   return `${Math.round(meters / 1000)} km away`;
 };
 
-export const sortByDistance = <T extends { latitude: number; longitude: number }>(
+export const sortByDistance = <T extends { latitude?: number | null; longitude?: number | null; [key: string]: any }>(
   items: T[],
   userLocation: { lat: number; lng: number }
 ): T[] => {
@@ -39,7 +39,7 @@ export const sortByDistance = <T extends { latitude: number; longitude: number }
   });
 };
 
-export const filterByDistance = <T extends { latitude: number; longitude: number }>(
+export const filterByDistance = <T extends { latitude?: number | null; longitude?: number | null; [key: string]: any }>(
   items: T[],
   userLocation: { lat: number; lng: number },
   radiusKm: number

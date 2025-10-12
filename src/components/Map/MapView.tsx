@@ -54,12 +54,12 @@ const MapView = ({ userRole, onTabChange }: MapViewProps) => {
     
     try {
       // Filter by distance radius
-      let filtered = filterByDistance(data, userLocation, radiusKm);
+      let filtered = filterByDistance(data as any[], userLocation, radiusKm);
       
       // Filter by search query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
-        filtered = filtered.filter(item => {
+        filtered = filtered.filter((item: any) => {
           if (userRole === 'food_receiver') {
             return item.title?.toLowerCase().includes(query) ||
                    item.description?.toLowerCase().includes(query) ||
