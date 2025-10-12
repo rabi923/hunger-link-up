@@ -110,22 +110,29 @@ const MapView = ({ userRole, onTabChange }: MapViewProps) => {
                 <Popup>You are here</Popup>
               </Marker>
             )}
-            {userRole === 'food_receiver' && Array.isArray(filteredData) && filteredData.map(item => (
-              <GiverMarker
-                key={item.id}
-                data={item}
-                userLocation={userLocation}
-                onChatClick={handleChatClick}
-              />
-            ))}
-            {userRole === 'food_giver' && Array.isArray(filteredData) && filteredData.map(item => (
-              <ReceiverMarker
-                key={item.id}
-                data={item}
-                userLocation={userLocation}
-                onChatClick={handleChatClick}
-              />
-            ))}
+            {userRole === 'food_receiver' ? (
+              <>
+                {filteredData.map(item => (
+                  <GiverMarker
+                    key={item.id}
+                    data={item}
+                    userLocation={userLocation}
+                    onChatClick={handleChatClick}
+                  />
+                ))}
+              </>
+            ) : (
+              <>
+                {filteredData.map(item => (
+                  <ReceiverMarker
+                    key={item.id}
+                    data={item}
+                    userLocation={userLocation}
+                    onChatClick={handleChatClick}
+                  />
+                ))}
+              </>
+            )}
             <MapControls onRecenter={recenter} />
           </MapContainer>
           <MapControlButtons onRecenter={recenter} />
