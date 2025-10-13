@@ -44,23 +44,14 @@ const GiverDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">Giver Dashboard</h1>
-        <p className="text-muted-foreground">Dashboard is loading...</p>
-        <button 
-          onClick={() => setShowRequestForm(true)}
-          className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded"
-        >
-          Open Form
-        </button>
-      </div>
+    <>
+      <MapView userRole="food_giver" onTabChange={(tab) => {}} />
       <RequestForm
         open={showRequestForm}
         onOpenChange={setShowRequestForm}
         onSuccess={() => {}}
       />
-    </div>
+    </>
   );
 };
 
